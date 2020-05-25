@@ -21,21 +21,49 @@ protected:
 	virtual bool Initialize() override;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* Host;
+	class UButton* HostButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* Join;
+	class UButton* JoinMenuButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* JoinGameButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* CancelJoinButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UWidgetSwitcher* MenuSwitcher;
+
+	UPROPERTY(meta = (BindWidget))
+	class UWidget* MainMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	class UWidget* JoinMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	class UEditableTextBox* JoinIP_AddressTextBox;
 
 	UFUNCTION()
 	void HostGame();
 	
 	UFUNCTION()
+	void OpenJoinMenu();
+
+	UFUNCTION()
 	void JoinGame();
+
+	UFUNCTION()
+	void BackToMainMenu();
 
 	ILMenuInterface* MenuInterface;
 
 public:
 
 	void SetMenuInterface(ILMenuInterface* MenuInterfac);
+
+	void Setup();
+
+	void Teardown();
 	
 };

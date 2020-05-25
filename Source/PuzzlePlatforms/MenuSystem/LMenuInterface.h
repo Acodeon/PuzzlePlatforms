@@ -23,7 +23,8 @@ class PUZZLEPLATFORMS_API ILMenuInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-
 	virtual void Host() = 0;
+
+	virtual void Join(FString Address) = 0;
 
 };

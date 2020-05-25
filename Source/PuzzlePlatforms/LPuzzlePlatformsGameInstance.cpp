@@ -7,12 +7,16 @@
 #include "LPressurePad.h"
 #include "Blueprint/UserWidget.h"
 #include "MenuSystem/LMainMenu.h"
+#include "MenuSystem/LInGameMenu.h"
 
 
 ULPuzzlePlatformsGameInstance::ULPuzzlePlatformsGameInstance(const FObjectInitializer& ObjectInitializer)
 {
 	ConstructorHelpers::FClassFinder<UUserWidget> MenuClassBP(TEXT("/Game/Menu/WB_MainMenu"));
 	MenuClass = MenuClassBP.Class;
+
+	ConstructorHelpers::FClassFinder<UUserWidget> InGameMenuClassBP(TEXT("/Game/Menu/WB_InGameMenu"));
+	InGameMenuClass = InGameMenuClassBP.Class;
 
 }
 
@@ -28,30 +32,40 @@ void ULPuzzlePlatformsGameInstance::LoadMenu()
 {
 	if (MenuClass)
 	{
-		ULMainMenu* Menu = CreateWidget<ULMainMenu>(this, MenuClass);
+		Menu = CreateWidget<ULMainMenu>(this, MenuClass);
 		if (Menu)
 		{
-			Menu->AddToViewport();
-			Menu->bIsFocusable = true;
-
-			APlayerController* PC = GetFirstLocalPlayerController();
-			if (PC)
-			{
-				FInputModeUIOnly InputData;
-
-				InputData.SetWidgetToFocus(Menu->TakeWidget());
-				InputData.SetLockMouseToViewportBehavior(EMouseLockMode::LockInFullscreen);
-
-				PC->SetInputMode(InputData);
-				PC->bShowMouseCursor = true;
-
-				Menu->SetMenuInterface(this);
-			}
-
+			Menu->Setup();
+			Menu->SetMenuInterface(this);
 		}
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("ManuClass is nullptr!"));
+}
+
+void ULPuzzlePlatformsGameInstance::LoadInGameMenu()
+{
+	if (InGameMenuClass)
+	{
+		InGameMenu = CreateWidget<ULInGameMenu>(this, InGameMenuClass);
+		if (InGameMenu)
+		{
+			InGameMenu->AddToViewport();
+			InGameMenu->bIsFocusable = true;
+
+			APlayerController* PC = GetWorld()->GetFirstPlayerController();
+			if (PC)
+			{
+				FInputModeUIOnly InputData;
+
+				InputData.SetWidgetToFocus(InGameMenu->TakeWidget());
+				InputData.SetLockMouseToViewportBehavior(EMouseLockMode::LockInFullscreen);
+
+				PC->SetInputMode(InputData);
+				PC->bShowMouseCursor = true;
+			}
+		}
+	}
 }
 
 void ULPuzzlePlatformsGameInstance::Host()
@@ -62,11 +76,21 @@ void ULPuzzlePlatformsGameInstance::Host()
 		engine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Hosting"));
 	}
 
+	if (Menu)
+	{
+		Menu->Teardown();
+	}
+
 	GetWorld()->ServerTravel("/Game/ThirdPersonCPP/Maps/ThirdPersonExampleMap?listen");
 }
 
 void ULPuzzlePlatformsGameInstance::Join(FString Address)
 {
+	if (Menu)
+	{
+		Menu->Teardown();
+	}
+
 	UEngine* engine = GetEngine();
 	if (engine)
 	{

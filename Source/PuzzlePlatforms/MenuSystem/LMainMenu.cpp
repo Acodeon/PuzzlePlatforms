@@ -3,15 +3,21 @@
 
 #include "LMainMenu.h"
 #include "Components/Button.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/EditableTextBox.h"
 
 bool ULMainMenu::Initialize()
 {
 	if (!Super::Initialize()) return false;
 
-	if (!Host || !Join) return false;
-		
-	Host->OnClicked.AddDynamic(this, &ULMainMenu::HostGame);
-	Join->OnClicked.AddDynamic(this, &ULMainMenu::JoinGame);
+	if (HostButton)
+		HostButton->OnClicked.AddDynamic(this, &ULMainMenu::HostGame);
+	if(JoinMenuButton)
+		JoinMenuButton->OnClicked.AddDynamic(this, &ULMainMenu::OpenJoinMenu);
+	if (CancelJoinButton)
+		CancelJoinButton->OnClicked.AddDynamic(this, &ULMainMenu::BackToMainMenu);
+	if (JoinGameButton)
+		JoinGameButton->OnClicked.AddDynamic(this, &ULMainMenu::JoinGame);
 
 	return true;
 }
@@ -33,12 +39,60 @@ void ULMainMenu::HostGame()
 
 }
 
+void ULMainMenu::OpenJoinMenu()
+{
+	if (MenuSwitcher && JoinMenu)
+		MenuSwitcher->SetActiveWidget(JoinMenu);
+}
 void ULMainMenu::JoinGame()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Joining a game..."));
+	if (JoinIP_AddressTextBox && MenuInterface)
+	{
+		FText IP_Address = JoinIP_AddressTextBox->GetText();
+		MenuInterface->Join(IP_Address.ToString());
+		//Teardown(); called in game instance
+	}
+
+}
+
+void ULMainMenu::BackToMainMenu()
+{
+	if (MenuSwitcher && MainMenu)
+		MenuSwitcher->SetActiveWidget(MainMenu);
 }
 
 void ULMainMenu::SetMenuInterface(ILMenuInterface* MenuInterfac)
 {
 	this->MenuInterface = MenuInterfac;
+}
+
+void ULMainMenu::Setup()
+{
+	this->AddToViewport();
+	this->bIsFocusable = true;
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (PC)
+	{
+		FInputModeUIOnly InputData;
+
+		InputData.SetWidgetToFocus(this->TakeWidget());
+		InputData.SetLockMouseToViewportBehavior(EMouseLockMode::LockInFullscreen);
+
+		PC->SetInputMode(InputData);
+		PC->bShowMouseCursor = true;
+	}
+}
+
+void ULMainMenu::Teardown()
+{
+	this->RemoveFromViewport();
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (PC)
+	{
+		PC->SetInputMode(FInputModeGameOnly());
+		PC->bShowMouseCursor = false;
+	}
 }

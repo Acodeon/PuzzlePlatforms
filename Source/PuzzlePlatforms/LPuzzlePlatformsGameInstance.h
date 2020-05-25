@@ -25,6 +25,12 @@ protected:
 
 	TSubclassOf<UUserWidget> MenuClass;
 
+	TSubclassOf<UUserWidget> InGameMenuClass;
+
+	class ULMainMenu* Menu;
+	
+	class ULInGameMenu* InGameMenu;
+
 	UFUNCTION(BlueprintCallable)
 	void LoadMenu();
 
@@ -33,5 +39,11 @@ protected:
 
 	UFUNCTION(Exec)
 	void Join(FString Address);
+
+public:
+
+	UFUNCTION()
+		void LoadInGameMenu();
+
 	
 };

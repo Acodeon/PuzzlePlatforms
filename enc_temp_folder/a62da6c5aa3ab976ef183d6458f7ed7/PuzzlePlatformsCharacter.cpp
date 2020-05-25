@@ -9,7 +9,6 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "MenuSystem/LInGameMenu.h"
-#include "LPuzzlePlatformsGameInstance.h"
 
 //////////////////////////////////////////////////////////////////////////
 // APuzzlePlatformsCharacter
@@ -98,11 +97,7 @@ void APuzzlePlatformsCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVec
 
 void APuzzlePlatformsCharacter::OpenInGameMenu()
 {
-	ULPuzzlePlatformsGameInstance* GI = Cast<ULPuzzlePlatformsGameInstance>(GetGameInstance());
-	if (GI)
-	{
-		GI->LoadInGameMenu();
-	}
+
 }
 
 void APuzzlePlatformsCharacter::TurnAtRate(float Rate)
