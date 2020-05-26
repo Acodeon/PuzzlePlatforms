@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "MenuSystem/LMenuInterface.h"
+#include "OnlineSubsystem.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "LPuzzlePlatformsGameInstance.generated.h"
 
 /**
@@ -27,23 +29,39 @@ protected:
 
 	TSubclassOf<UUserWidget> InGameMenuClass;
 
+	IOnlineSessionPtr SessionInterface;
+
+	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
+
 	class ULMainMenu* Menu;
 	
 	class ULInGameMenu* InGameMenu;
 
 	UFUNCTION(BlueprintCallable)
-	void LoadMenu();
+	void LoadMenuWidget();
 
 	UFUNCTION(Exec)
 	void Host();
 
 	UFUNCTION(Exec)
-	void Join(FString Address);
+	void Join(uint32 Index);
+
+	void OnCreateSessionComplete(FName SessionName, bool Success);
+
+	void OnDestroySessionComplete(FName SessionName, bool Success);
+
+	void OnFindSessionComplete(bool Success);
+
+	void OnJoinSessionComplete(FName JoinName, EOnJoinSessionCompleteResult::Type REsult);
+
+	void CreateSession();
 
 public:
 
 	UFUNCTION()
 		void LoadInGameMenu();
+
+	void RefreshServerList() override;
 
 	
 };

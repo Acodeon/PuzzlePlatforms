@@ -5,6 +5,22 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableTextBox.h"
+#include "UObject/ConstructorHelpers.h"
+#include "LServerRow.h"
+#include "Components/TextBlock.h"
+
+
+
+ULMainMenu::ULMainMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+	ConstructorHelpers::FClassFinder<UUserWidget> ServerRowClassBP(TEXT("/Game/Menu/WB_ServerRow"));
+	ServerRowClass = ServerRowClassBP.Class;
+}
+
+void ULMainMenu::SelectIndex(uint32 Index)
+{
+	SelectedIndex = Index;
+}
 
 bool ULMainMenu::Initialize()
 {
@@ -43,16 +59,27 @@ void ULMainMenu::OpenJoinMenu()
 {
 	if (MenuSwitcher && JoinMenu)
 		MenuSwitcher->SetActiveWidget(JoinMenu);
+	if (MenuInterface)
+		MenuInterface->RefreshServerList();
 }
+
 void ULMainMenu::JoinGame()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Joining a game..."));
-	if (JoinIP_AddressTextBox && MenuInterface)
+	if (SelectedIndex.IsSet())
 	{
-		FText IP_Address = JoinIP_AddressTextBox->GetText();
-		MenuInterface->Join(IP_Address.ToString());
-		//Teardown(); called in game instance
+		UE_LOG(LogTemp, Warning, TEXT("Selected index %d"), SelectedIndex.GetValue());
+		if (MenuInterface)
+		{
+			//FText IP_Address = JoinIP_AddressTextBox->GetText();
+			MenuInterface->Join(SelectedIndex.GetValue());
+		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Selected index not set"));
+	}
+
+
 
 }
 
@@ -94,5 +121,28 @@ void ULMainMenu::Teardown()
 	{
 		PC->SetInputMode(FInputModeGameOnly());
 		PC->bShowMouseCursor = false;
+	}
+}
+
+void ULMainMenu::SetServerList(TArray<FString> ServerNames)
+{
+	ServerList->ClearChildren();
+
+	if (ServerRowClass)
+	{
+		uint32 i = 0;
+		for (const FString& ServerName : ServerNames)
+		{
+			ULServerRow* Row = CreateWidget<ULServerRow>(this, ServerRowClass);
+			if (Row)
+			{
+				Row->ServerName->SetText(FText::FromString(ServerName));
+				Row->Setup(this, i);
+				i++;
+				ServerList->AddChild(Row);
+			}
+		}
+		
+
 	}
 }

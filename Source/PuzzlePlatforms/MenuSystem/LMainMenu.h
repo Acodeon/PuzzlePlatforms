@@ -15,10 +15,17 @@ class PUZZLEPLATFORMS_API ULMainMenu : public UUserWidget
 {
 	GENERATED_BODY()
 
+public:
+
+	ULMainMenu(const FObjectInitializer& ObjectInitializer);
+
+	void SelectIndex(uint32 Index);
 
 protected:
 
 	virtual bool Initialize() override;
+
+	TSubclassOf<UUserWidget> ServerRowClass;
 
 	UPROPERTY(meta = (BindWidget))
 	class UButton* HostButton;
@@ -42,7 +49,7 @@ protected:
 	class UWidget* JoinMenu;
 
 	UPROPERTY(meta = (BindWidget))
-	class UEditableTextBox* JoinIP_AddressTextBox;
+	class UPanelWidget* ServerList;
 
 	UFUNCTION()
 	void HostGame();
@@ -58,6 +65,8 @@ protected:
 
 	ILMenuInterface* MenuInterface;
 
+	TOptional<uint32> SelectedIndex;
+
 public:
 
 	void SetMenuInterface(ILMenuInterface* MenuInterfac);
@@ -65,5 +74,7 @@ public:
 	void Setup();
 
 	void Teardown();
+
+	void SetServerList(TArray<FString> ServerNames);
 	
 };
