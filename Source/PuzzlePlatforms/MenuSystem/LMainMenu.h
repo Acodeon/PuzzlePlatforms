@@ -7,6 +7,21 @@
 #include "LMenuInterface.h"
 #include "LMainMenu.generated.h"
 
+USTRUCT()
+struct FServerData
+{
+	GENERATED_BODY()
+
+	FString Name;
+
+	uint16 CurrentPlayers;
+
+	uint16 MaxPlayers;
+
+	FString HostUserName;
+
+};
+
 /**
  * 
  */
@@ -37,7 +52,13 @@ protected:
 	class UButton* JoinGameButton;
 
 	UPROPERTY(meta = (BindWidget))
+	class UButton* HostGameButton;
+
+	UPROPERTY(meta = (BindWidget))
 	class UButton* CancelJoinButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* CancelHostButton;
 
 	UPROPERTY(meta = (BindWidget))
 	class UWidgetSwitcher* MenuSwitcher;
@@ -49,7 +70,13 @@ protected:
 	class UWidget* JoinMenu;
 
 	UPROPERTY(meta = (BindWidget))
+	class UWidget* HostMenu;
+
+	UPROPERTY(meta = (BindWidget))
 	class UPanelWidget* ServerList;
+
+	UPROPERTY(meta = (BindWidget))
+	class UEditableTextBox* ServerNameTextBox;
 
 	UFUNCTION()
 	void HostGame();
@@ -58,10 +85,15 @@ protected:
 	void OpenJoinMenu();
 
 	UFUNCTION()
+	void OpenHostMenu();
+
+	UFUNCTION()
 	void JoinGame();
 
 	UFUNCTION()
 	void BackToMainMenu();
+
+	void UpdateChildren();
 
 	ILMenuInterface* MenuInterface;
 
@@ -75,6 +107,8 @@ public:
 
 	void Teardown();
 
-	void SetServerList(TArray<FString> ServerNames);
+	void SetServerList(TArray<FServerData> ServerNames);
+
+	FName GetServerName();
 	
 };

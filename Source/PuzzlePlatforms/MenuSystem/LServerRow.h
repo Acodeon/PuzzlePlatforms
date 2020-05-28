@@ -24,6 +24,9 @@ public:
 
 	void Setup(class ULMainMenu* InParent, uint32 InIndex);
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bSelected = false;
+
 protected:
 
 	UFUNCTION()

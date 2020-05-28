@@ -11,7 +11,6 @@
 #include "OnlineSessionSettings.h"
 
 
-const static FName SESSION_NAME = TEXT("My session name");
 
 ULPuzzlePlatformsGameInstance::ULPuzzlePlatformsGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -90,20 +89,29 @@ void ULPuzzlePlatformsGameInstance::RefreshServerList()
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
 	if (SessionSearch)
 	{
-		SessionSearch->bIsLanQuery = true;
+		//SessionSearch->bIsLanQuery = true;
+		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		UE_LOG(LogTemp, Warning, TEXT("Starting find session"));
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
 }
 
-void ULPuzzlePlatformsGameInstance::Host()
+void ULPuzzlePlatformsGameInstance::StartSession()
 {
 	if (SessionInterface)
+		SessionInterface->StartSession(NAME_GameSession);
+}
+
+void ULPuzzlePlatformsGameInstance::Host()
+{
+	if (SessionInterface && Menu)
 	{
-		auto ExistingSession = SessionInterface->GetNamedSession(SESSION_NAME);
+		ServerName = Menu->GetServerName();
+		auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
 
 		if (ExistingSession)
-			SessionInterface->DestroySession(SESSION_NAME); 
+			SessionInterface->DestroySession(NAME_GameSession);
 		else
 			CreateSession();
 
@@ -119,7 +127,7 @@ void ULPuzzlePlatformsGameInstance::Join(uint32 Index)
 		Menu->Teardown();
 	}
 
-	SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[Index]);
+	SessionInterface->JoinSession(0, NAME_GameSession, SessionSearch->SearchResults[Index]);
 
 
 }
@@ -138,7 +146,7 @@ void ULPuzzlePlatformsGameInstance::OnCreateSessionComplete(FName SessionName, b
 		Menu->Teardown();
 	}
 
-	GetWorld()->ServerTravel("/Game/ThirdPersonCPP/Maps/ThirdPersonExampleMap?listen");
+	GetWorld()->ServerTravel("/Game/Maps/Lobby?listen");
 }
 
 void ULPuzzlePlatformsGameInstance::OnDestroySessionComplete(FName SessionName, bool Success)
@@ -152,11 +160,29 @@ void ULPuzzlePlatformsGameInstance::OnFindSessionComplete(bool Success)
 	UE_LOG(LogTemp, Warning, TEXT("Find session complete"));
 	if (Success && SessionSearch && Menu)
 	{
-		TArray<FString> ServerNames;
+		TArray<FServerData> ServerNames;
 		for (const FOnlineSessionSearchResult& result : SessionSearch->SearchResults)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s"), *result.GetSessionIdStr());
-			ServerNames.Add(result.GetSessionIdStr());
+			FServerData Data;
+			
+			//Data.MaxPlayers = result.Session.NumOpenPublicConnections;
+			Data.MaxPlayers = result.Session.SessionSettings.NumPublicConnections;
+			Data.CurrentPlayers = Data.MaxPlayers - result.Session.NumOpenPublicConnections;
+			Data.HostUserName = result.Session.OwningUserName;
+			FString SessionData;
+			if(result.Session.SessionSettings.Get(TEXT("ServerName"), SessionData))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Data found in settings: %s"), *SessionData);
+				Data.Name = SessionData;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Data not found"));
+				Data.Name = result.GetSessionIdStr();
+			}
+			
+			ServerNames.Add(Data);
 		}
 
 		Menu->SetServerList(ServerNames);
@@ -195,9 +221,17 @@ void ULPuzzlePlatformsGameInstance::CreateSession()
 	{
 		//FOnlineSessionSetting SessionSettings;
 		FOnlineSessionSettings NewSessionSettings = FOnlineSessionSettings();
-		NewSessionSettings.bIsLANMatch = true;
-		NewSessionSettings.NumPublicConnections = 2;
+
+		if(IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+			NewSessionSettings.bIsLANMatch = true;
+		else
+			NewSessionSettings.bIsLANMatch = false;
+
+		NewSessionSettings.NumPublicConnections = 5;
 		NewSessionSettings.bShouldAdvertise = true;
-		SessionInterface->CreateSession(0, SESSION_NAME, NewSessionSettings);
+		NewSessionSettings.bUsesPresence = true;
+		NewSessionSettings.Set(TEXT("ServerName"), ServerName.ToString(), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+
+		SessionInterface->CreateSession(0, NAME_GameSession, NewSessionSettings);
 	}
 }

@@ -33,6 +33,8 @@ protected:
 
 	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
 
+	FName ServerName;
+
 	class ULMainMenu* Menu;
 	
 	class ULInGameMenu* InGameMenu;
@@ -62,6 +64,9 @@ public:
 		void LoadInGameMenu();
 
 	void RefreshServerList() override;
+
+	void StartSession();
+
 
 	
 };
